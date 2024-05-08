@@ -1,0 +1,12 @@
+Index,CITY,CITY_ASCII,LAT,LNG,COUNTRY,ISO2,ISO3,ADMIN_NAME,CAPITAL,POPULATION,ID
+1,Seoul,Seoul,37.5833,127,"Korea, South",KR,KOR,Seoul,primary,21794000,1410836482
+2,New York,New York,40.6943,-73.9249,United States,US,USA,New York,NA,18713220,1840034016
+3,Paris,Paris,48.8566,2.3522,France,FR,FRA,Île-de-France,primary,11020000,1250015082
+4,London,London,51.5072,-0.1275,United Kingdom,GB,GBR,"London, City of",primary,10979000,1826645935
+5,Suzhou,Suzhou,31.304,120.6164,China,CN,CHN,Jiangsu,minor,5250000,1156029196
+6,Atlanta,Atlanta,33.4456,-84.2324,United States,US,USA,Atlanta,NA,6193000,
+7,Boston,Boston,42.3601,-71.0589,United States,US,USA,Boston,NA,650706,
+8,Miami,Miami,25.7617,-80.1918,United States,US,USA,Miami,NA,449514,
+9,Philadelphia,Philadelphia,39.9526,-75.1652,United States,US,USA,Philadelphia,NA,6245051,
+10,Washington,Washington,38.9072,-77.0369,United States,US,USA,Washington,primary,671803,
+11,Charlotte,Charlotte,35.2271,-80.8431,United States,US,USA,Charlotte,NA,2805115,
