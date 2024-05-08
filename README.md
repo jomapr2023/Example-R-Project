@@ -35,5 +35,5 @@ available here: </href> https://www.coursera.org/learn/data-science-with-r-capst
 
 Comments are welcome. This is one of my earliest projects. 
 
-
+J. Gorsuch 5/8/24
 
