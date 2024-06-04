@@ -74,7 +74,7 @@ city_forecast <- function(city_names){
                                                "Visibility: ", result$visibility, " m </br>",
                                                "Humidity: ", result$main$humidity, " % </br>", 
                                                "Wind Speed: ", result$wind$speed, " m/s </br>", 
-                                               "Datetime: ", forecast_dt, " </br>"))
+                                               "Datetime: ", result$dt_txt, " </br>"))
       #Check for missing values
       if (any(sapply(observation, is.null))==0){
         weather_df <- weather_df %>% rbind(observation)
