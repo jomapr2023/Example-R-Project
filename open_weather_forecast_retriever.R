@@ -3,28 +3,55 @@ require(httr)
 library(readr)
 library(configr)
 
-minMaxScaler <- function(var){
-  var <- (var - min(var)) / (max(var) - min(var))
-}
-
 #Fetch keys from external file
 config <- read.config('keys.ini')
 api_key <- config$open_weather_api$api_key
 wapi_id <- config$open_weather_api$wapi_id
 
-city_forecast <- function(city_names){
+init_weather_preds <- function(list){
+  for (x in list){
+    assign(x, numeric(0), envir = parent.frame())
+  }
+}
 
-  city <- c()
-  weather <- c()
-  temperature <- c()
-  visibility <- c()
-  humidity <- c()
-  wind_speed <- c()
-  seasons <- c()
-  hours <- c()
-  forecast_date <-c()
-  weather_labels<-c()
-  weather_details_labels<-c()
+minMaxScaler <- function(var){
+  var <- (var - min(var)) / (max(var) - min(var))
+}
+
+season <- function(month){
+  quarter <- ""
+  if (month >= 3 && month <= 5)
+    quarter <- "SPRING"
+  else if(month >= 6  &&  month <= 8)
+    quarter <- "SUMMER"
+  else if (month >= 9  && month <= 11)
+    quarter <- "AUTUMN"
+  else
+    quarter <- "WINTER"
+  return(quarter)
+}
+
+city_forecast <- function(city_names){
+  
+  predictors_ow <- list('city', 'weather', 'temperature',
+                        'visibility', 'humidity', 'wind_speed',
+                        'seasons', 'hours', 'forecast_date',
+                        'weather_labels', 'weather_details_labels')
+  
+  init_weather_preds(predictors_ow)
+  
+  weather_df <- tibble(CITY_ASCII=character(), 
+                       WEATHER=character(), 
+                       TEMPERATURE=numeric(),
+                       VISIBILITY=numeric(), 
+                       HUMIDITY=numeric(), 
+                       WIND_SPEED=numeric(),
+                       HOURS=numeric(), 
+                       MONTH=numeric(),
+                       FORECASTDATETIME=numeric(),
+                       LABEL=character(),
+                       DETAILED_LABEL=character(),
+                       SEASONS=character())
   
   # Scrape for 5-day forecasts
   for (city_name in city_names){
@@ -37,62 +64,42 @@ city_forecast <- function(city_names){
     forecasts <- json_list$list
     
     for(result in forecasts) {
-      city <- c(city, city_name)
-      weather <- c(weather, result$weather[[1]]$main)
-      
-      #Predictor variables
-      temperature <- c(temperature, result$main$temp)
-      visibility <- c(visibility, result$visibility)
-      humidity <- c(humidity, result$main$humidity)
-      wind_speed <- c(wind_speed, result$wind$speed)
-      
-      forecast_dt <- result$dt_txt
-      hour <- as.numeric(strftime(forecast_dt, format="%H"))
-      month <- as.numeric(strftime(forecast_dt, format="%m"))
-      forecast_date <- c(forecast_date, forecast_dt)
-      
-      season <- "Spring"
-      if (month >= 3 && month <= 5)
-        season <- "SPRING"
-      else if(month >= 6  &&  month <= 8)
-        season <- "SUMMER"
-      else if (month >= 9  && month <= 11)
-        season <- "AUTUMN"
-      else
-        season <- "WINTER"
-      
-      # HTML labels for Leaflet
-      weather_label <- paste(sep = "",
-                             "<b>", city_name, "</b></br>", 
-                             "<b>", result$weather[[1]]$main, "</b></br>")
-      # Detailed HTML labels
-      weather_detail_label <- paste(sep = "", weather_label,
-                                    "Temperature: ", result$main$temp, " C </br>",
-                                    "Visibility: ", result$visibility, " m </br>",
-                                    "Humidity: ", result$main$humidity, " % </br>", 
-                                    "Wind Speed: ", result$wind$speed, " m/s </br>", 
-                                    "Datetime: ", forecast_dt, " </br>")
-      
-      weather_labels <- c(weather_labels, weather_label)
-      weather_details_labels <- c(weather_details_labels, weather_detail_label)
-      
-      seasons <- c(seasons, season)
-      hours <- c(hours, hour)
+      observation <- list(CITY_ASCII=city_name,
+                          WEATHER=result$weather[[1]]$main, 
+                          TEMPERATURE=result$main$temp,
+                          TEMPERATURE2=result$main$temp,
+                          VISIBILITY=result$visibility, 
+                          HUMIDITY=result$main$humidity,
+                          WIND_SPEED=result$wind$speed,
+                          HOURS=as.numeric(strftime(result$dt_txt, format="%H")),
+                          MONTH=as.numeric(strftime(result$dt_txt, format="%m")),
+                          FORECASTDATETIME=result$dt_txt,
+                          DATE=result$dt_txt,
+                          SEASONS=season(as.numeric(strftime(result$dt_txt, 
+                                                             format="%m"))),
+                          LABEL=paste(sep = "",
+                                      "<b>", city_name, "</b></br>", 
+                                      "<b>", result$weather[[1]]$main, "</b></br>"),
+                          DETAILED_LABEL=paste(sep = "", 
+                                               "<b>", city_name, "</b></br>", 
+                                               "<b>", result$weather[[1]]$main, "</b></br>",
+                                               "Temperature: ", result$main$temp, " C </br>",
+                                               "Visibility: ", result$visibility, " m </br>",
+                                               "Humidity: ", result$main$humidity, " % </br>", 
+                                               "Wind Speed: ", result$wind$speed, " m/s </br>", 
+                                               "Datetime: ", forecast_dt, " </br>"))
+      #Check for missing values
+      if (any(sapply(observation, is.null))==0){
+        weather_df <- weather_df %>% rbind(observation)
+      }
     }
+    
   }
+  #Rescale for use with champion model 
+  weather_df['VISIBILITY'] <- weather_df$visibility/10000
+  weather_df['HUMIDITY'] <- minMaxScaler(weather_df$HUMIDITY)
+  weather_df['WIND_SPEED'] <- minMaxScaler(weather_df$WIND_SPEED)
+  weather_df['TEMPERATURE'] <- minMaxScaler(weather_df$TEMPERATURE)
   
-  # Create and return a tibble
-  weather_df <- tibble(CITY_ASCII=city, WEATHER=weather, 
-                       TEMPERATURE=minMaxScaler(temperature),
-                       TEMPERATURE2=temperature,
-                       VISIBILITY=visibility/10000, 
-                       HUMIDITY=minMaxScaler(humidity), 
-                       WIND_SPEED=minMaxScaler(wind_speed), 
-                       SEASONS=season, HOURS=hours, 
-                       FORECASTDATETIME=forecast_date, 
-                       DATE=forecast_date,
-                       LABEL=weather_labels, 
-                       DETAILED_LABEL=weather_details_labels)
   return(weather_df)
 }
-
