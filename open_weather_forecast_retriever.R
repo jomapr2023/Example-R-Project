@@ -8,12 +8,6 @@ config <- read.config('keys.ini')
 api_key <- config$open_weather_api$api_key
 wapi_id <- config$open_weather_api$wapi_id
 
-init_weather_preds <- function(list){
-  for (x in list){
-    assign(x, numeric(0), envir = parent.frame())
-  }
-}
-
 minMaxScaler <- function(var){
   var <- (var - min(var)) / (max(var) - min(var))
 }
