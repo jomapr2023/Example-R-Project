@@ -32,14 +32,7 @@ season <- function(month){
 }
 
 city_forecast <- function(city_names){
-  
-  predictors_ow <- list('city', 'weather', 'temperature',
-                        'visibility', 'humidity', 'wind_speed',
-                        'seasons', 'hours', 'forecast_date',
-                        'weather_labels', 'weather_details_labels')
-  
-  init_weather_preds(predictors_ow)
-  
+ 
   weather_df <- tibble(CITY_ASCII=character(), 
                        WEATHER=character(), 
                        TEMPERATURE=numeric(),
